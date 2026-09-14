@@ -5,9 +5,10 @@ O **Asterisk** chama o CLI direto pelo dialplan; ele só **acorda o app**. A lig
 
 ```
 Chamada → Asterisk (dialplan)
-   ├─ ramal COM Contact  → Dial direto
-   └─ ramal SEM Contact  → System(/usr/local/bin/asterisk-push-notify "ramal" "caller")
-                            → assina o JWT (ES256) e manda o APNs → app acorda
+   → asterisk-push-notify: OPTIONS pro app
+        ├─ respondeu (vivo)   → nada (disca direto)
+        └─ não respondeu (morto) → APNs/FCM → app acorda → re-registra
+   → Dial(PJSIP/...) → app atende
 ```
 
 > Esta documentação é genérica: troque os placeholders `<...>` pelos valores da
@@ -106,20 +107,18 @@ No `extensions.conf`, no contexto dos seus ramais, adicione **antes do `Dial`**
 (troque o padrão `_9XXX` pelo seu):
 
 ```
-exten => _9XXX,1,Set(CONTACTS=${PJSIP_DIAL_CONTACTS(${EXTEN})})
- same => n,GotoIf($["${CONTACTS}" != ""]?ja_registrado)
- same => n,System(/usr/local/bin/asterisk-push-notify "${EXTEN}" "${CALLERID(num)}")
- same => n,Wait(3)
- same => n(ja_registrado),Dial(PJSIP/${EXTEN},30)
+exten => _9XXX,1,System(/usr/local/bin/asterisk-push-notify "${EXTEN}" "${PJSIP_DIAL_CONTACTS(${EXTEN})}" "${CALLERID(num)}")
+ same => n,GotoIf($["${SYSTEMSTATUS}" = "SUCCESS"]?dial:wake)
+ same => n(wake),Wait(3)
+ same => n(dial),Dial(PJSIP/${EXTEN},30)
  same => n,Hangup()
 ```
 
-O que cada linha faz:
-1. `PJSIP_DIAL_CONTACTS` devolve os registros ativos do ramal (vazio = aparelho offline).
-2. Se **tem** registro → pula direto para o `Dial` (sem push).
-3. Se **não tem** → executa o CLI (manda o push).
-4. `Wait(3)` dá tempo do app acordar e re-registrar.
-5. `Dial` disca para o ramal.
+O que acontece:
+1. O CLI manda um `OPTIONS` para o contato do ramal.
+2. Se o app **respondeu** (vivo) → código `0` → `${SYSTEMSTATUS}=SUCCESS` → disca direto.
+3. Se **não respondeu** (morto/suspenso) → manda o push → código `1` → `Wait(3)` → disca.
+4. `Wait(3)` dá tempo do app acordar e re-registrar antes do `Dial`.
 
 Recarregue:
 ```bash
@@ -132,7 +131,8 @@ sudo asterisk -rx "dialplan reload"
 
 ### 5.1 Push direto
 ```bash
-sudo -u asterisk /usr/local/bin/asterisk-push-notify <RAMAL> <CALLER>
+# força o push (contato vazio = app "morto")
+sudo -u asterisk /usr/local/bin/asterisk-push-notify <RAMAL> "" <CALLER>
 # delivered=true provider=apns_voip ramal=<RAMAL>
 ```
 

@@ -1,8 +1,6 @@
 package main
 
 import (
-	"crypto/rand"
-	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -10,15 +8,22 @@ import (
 	"time"
 )
 
-// asterisk-push-notify — CLI de push (sem daemon).
+// asterisk-push-notify — acordador de softphone (CLI, sem daemon).
+//
+// Responsabilidade: checar se o app está vivo (SIP OPTIONS) e, se estiver
+// "dormindo" (morto), enviar o push para acordá-lo. O dialplan então disca.
 //
 // Uso:
-//   asterisk-push-notify <ramal> [caller]                 # dispara o push do ramal
+//   asterisk-push-notify <ramal> [contacts] [caller]   # checa vivo; morto → push
 //   asterisk-push-notify --register <ramal> <token> [provider] [deviceId]
 //   asterisk-push-notify --list
 //
-// Config por variavel de ambiente (ver INSTALL.md). O dialplan chama o modo
-// "notify" via System(); o modo "--register" e usado para cadastrar o token.
+// Codigo de saida (o dialplan usa ${SYSTEMSTATUS} para decidir):
+//   0 = app vivo (discar direto, sem push)
+//   1 = app morto (push enviado; o dialplan espera o app re-registrar e disca)
+//
+// Config por variavel de ambiente (ver INSTALL.md). O dialplan passa os
+// contatos via ${PJSIP_DIAL_CONTACTS(...)} para o OPTIONS.
 
 func main() {
 	cfg := loadConfig()
@@ -46,28 +51,41 @@ func main() {
 		}
 		fmt.Println("ok")
 	default:
-		// modo notify: nunca falha a chamada por causa do push.
-		if err := notify(cfg, args[0], callerOf(args)); err != nil {
-			fmt.Fprintln(os.Stderr, "asterisk-push-notify:", err)
+		// modo notify: <ramal> [contacts] [caller]
+		ramal := args[0]
+		contacts := argOr(args, 1, "")
+		caller := argOr(args, 2, "")
+
+		if checkAlive(contacts) {
+			fmt.Fprintln(os.Stderr, "alive=true (sem push)")
+			os.Exit(0)
 		}
-		os.Exit(0)
+		// app morto (ou sem contato) → push
+		if err := sendPush(cfg, ramal, caller); err != nil {
+			fmt.Fprintln(os.Stderr, "dead=true push=failed:", err)
+		} else {
+			fmt.Fprintln(os.Stderr, "dead=true push=delivered")
+		}
+		os.Exit(1)
 	}
 }
 
-func callerOf(args []string) string {
-	if len(args) > 1 {
-		return args[1]
+func argOr(args []string, i int, fallback string) string {
+	if len(args) > i {
+		return args[i]
 	}
-	return ""
+	return fallback
 }
 
 func usage() {
-	fmt.Println(`asterisk-push-notify — push VoIP (VoIPforall)
+	fmt.Println(`asterisk-push-notify — acordador de softphone
 
-  asterisk-push-notify <ramal> [caller]                    dispara o push
+  asterisk-push-notify <ramal> [contacts] [caller]        checa vivo; morto → push
   asterisk-push-notify --register <ramal> <token> [provider] [deviceId]
   asterisk-push-notify --list                              lista os tokens
   asterisk-push-notify --help
+
+  <contacts> = saida de ${PJSIP_DIAL_CONTACTS(<ramal>)} (para o OPTIONS).
 
 Variaveis: PUSH_DATA_FILE, APNS_KEY_PATH, APNS_KEY_ID, APNS_TEAM_ID,
 APNS_TOPIC, APNS_ENVIRONMENT, FCM_SERVICE_ACCOUNT_JSON`)
@@ -120,7 +138,8 @@ func register(cfg Config, args []string) error {
 	})
 }
 
-func notify(cfg Config, ramal, caller string) error {
+// sendPush envia o push (APNs/FCM) para os aparelhos registrados do ramal.
+func sendPush(cfg Config, ramal, caller string) error {
 	ramal = strings.TrimSpace(ramal)
 	if ramal == "" {
 		return fmt.Errorf("ramal vazio")
@@ -142,7 +161,7 @@ func notify(cfg Config, ramal, caller string) error {
 	if caller == "" {
 		caller = ramal
 	}
-	callID := newID()
+	callID := randomHex(16)
 	ttl := 30
 
 	lastReason := "provider_unavailable"
@@ -164,10 +183,4 @@ func notify(cfg Config, ramal, caller string) error {
 		lastReason = reason
 	}
 	return fmt.Errorf("nao entregue: %s", lastReason)
-}
-
-func newID() string {
-	buf := make([]byte, 16)
-	_, _ = rand.Read(buf)
-	return hex.EncodeToString(buf)
 }

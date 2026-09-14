@@ -1,18 +1,21 @@
 # asterisk-push-notify-mobile
 
 Acordador de **softphone** para o **Asterisk**: um binário único (Go, sem
-dependências) que o dialplan executa para **acordar o app do celular** (push)
-quando um ramal está **sem registro ativo**.
+dependências) que o dialplan executa. Ele **checa se o app está vivo** (manda um
+SIP `OPTIONS`) e, se estiver **"dormindo"** (processo morto/suspenso pelo iOS ou
+Android), **envia o push** para acordá-lo — e o dialplan então disca.
 
 - **Não cria ramais.** Funciona com os ramais que você já tem.
 - **Não cria módulo.** É um binário externo chamado por uma linha no dialplan.
-- **A ligação continua 100% no Asterisk** — isto só manda o push (APNs para iOS,
-  FCM para Android).
+- **A ligação continua 100% no Asterisk** — o binário só decide "acorda ou não".
 
 ```
 Chamada → Asterisk (dialplan)
-   ├─ ramal COM registro  → disca direto
-   └─ ramal SEM registro  → asterisk-push-notify → APNs/FCM → app acorda
+   → asterisk-push-notify:
+       OPTIONS pro app
+         ├─ respondeu (vivo)   → não faz nada (disca direto)
+         └─ não respondeu (morto) → APNs/FCM → app acorda → re-registra
+   → Dial(PJSIP/...) → app atende
 ```
 
 ---
@@ -31,11 +34,11 @@ sudo nano /etc/asterisk-push-notify-mobile/push.env
 sudo asterisk-push-notify --register <RAMAL> <TOKEN>
 
 # 4. gancho no dialplan (no seu contexto, antes do Dial)
-#    exten => _9XXX,1,Set(CONTACTS=${PJSIP_DIAL_CONTACTS(${EXTEN})})
-#     same => n,GotoIf($["${CONTACTS}" != ""]?ja_registrado)
-#     same => n,System(/usr/local/bin/asterisk-push-notify "${EXTEN}" "${CALLERID(num)}")
-#     same => n,Wait(3)
-#     same => n(ja_registrado),Dial(PJSIP/${EXTEN},30)
+#    exten => _9XXX,1,System(/usr/local/bin/asterisk-push-notify "${EXTEN}" "${PJSIP_DIAL_CONTACTS(${EXTEN})}" "${CALLERID(num)}")
+#     same => n,GotoIf($["${SYSTEMSTATUS}" = "SUCCESS"]?dial:wake)
+#     same => n(wake),Wait(3)
+#     same => n(dial),Dial(PJSIP/${EXTEN},30)
+#     same => n,Hangup()
 ```
 
 ---
@@ -43,10 +46,13 @@ sudo asterisk-push-notify --register <RAMAL> <TOKEN>
 ## Comandos
 
 ```
-asterisk-push-notify <ramal> [caller]                     dispara o push
+asterisk-push-notify <ramal> [contacts] [caller]         checa vivo; morto → push
 asterisk-push-notify --register <ramal> <token> [provider]  cadastra o token
 asterisk-push-notify --list                               lista os tokens
 ```
+
+> `<contacts>` é a saída de `${PJSIP_DIAL_CONTACTS(<ramal>)}` (o dialplan passa),
+> usada para o `OPTIONS`.
 
 ---
 

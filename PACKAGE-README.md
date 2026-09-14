@@ -1,12 +1,14 @@
 # asterisk-push-notify-mobile — acordador de softphone
 
 Este pacote instala **apenas o "acordador"**: um binário que o dialplan do
-Asterisk executa para **acordar o app do celular** (push) quando um ramal está
-**sem registro ativo**.
+Asterisk executa. Ele **checa se o app está vivo** (manda um SIP `OPTIONS`) e,
+se estiver **"dormindo"** (processo morto/suspenso), **envia o push** para
+acordá-lo — o dialplan então disca.
 
 - **Não cria ramais.** Seus ramais atuais continuam como estão.
 - **Não cria módulo.** É um binário externo chamado pelo dialplan.
-- A **ligação continua 100% no Asterisk** — este binário só manda o push.
+- **Não depende de `qualify` do servidor** — o próprio binário faz o `OPTIONS`.
+- A **ligação continua 100% no Asterisk** — o binário só decide "acorda ou não".
 
 ---
 
@@ -63,23 +65,23 @@ sudo -u asterisk /usr/local/bin/asterisk-push-notify --list
 ## 4. Gancho no dialplan (no SEU contexto)
 
 No contexto que recebe as chamadas dos **seus ramais**, adicione, **antes do
-`Dial`**, a checagem de registro. Adapte o padrão (`_9XXX` etc.) ao seu caso:
+`Dial`**. Adapte o padrão (`_9XXX` etc.) ao seu caso:
 
 ```
-exten => _9XXX,1,Set(CONTACTS=${PJSIP_DIAL_CONTACTS(${EXTEN})})
- same => n,GotoIf($["${CONTACTS}" != ""]?ja_registrado)
- same => n,System(/usr/local/bin/asterisk-push-notify "${EXTEN}" "${CALLERID(num)}")
- same => n,Wait(3)
- same => n(ja_registrado),Dial(PJSIP/${EXTEN},30)
+exten => _9XXX,1,System(/usr/local/bin/asterisk-push-notify "${EXTEN}" "${PJSIP_DIAL_CONTACTS(${EXTEN})}" "${CALLERID(num)}")
+ same => n,GotoIf($["${SYSTEMSTATUS}" = "SUCCESS"]?dial:wake)
+ same => n(wake),Wait(3)
+ same => n(dial),Dial(PJSIP/${EXTEN},30)
  same => n,Hangup()
 ```
 
-O que cada linha faz:
-1. `PJSIP_DIAL_CONTACTS` devolve os registros ativos do ramal (vazio = aparelho offline).
-2. Se **tem** registro → pula direto para o `Dial` (sem push).
-3. Se **não tem** → executa o acordador (manda o push).
-4. `Wait(3)` dá tempo do app acordar e re-registrar.
-5. `Dial` disca para o ramal.
+O que acontece:
+1. O binário manda um `OPTIONS` para o contato do ramal.
+2. Se o app **respondeu** (vivo) → sai com código `0` → `${SYSTEMSTATUS}=SUCCESS` → disca direto (sem push).
+3. Se o app **não respondeu** (morto/suspenso) → manda o push → sai com código `1` → `${SYSTEMSTATUS}=FAILURE` → `Wait(3)` → disca.
+4. `Wait(3)` dá tempo do app acordar e re-registrar antes do `Dial`.
+
+> Sem depender de `qualify` no servidor: o próprio binário faz a checagem `OPTIONS`.
 
 Depois de editar: `asterisk -rx "dialplan reload"`.
 
@@ -88,8 +90,8 @@ Depois de editar: `asterisk -rx "dialplan reload"`.
 ## 5. Testar
 
 ```bash
-# push direto (o celular deve tocar)
-sudo -u asterisk /usr/local/bin/asterisk-push-notify <RAMAL> <CALLER>
+# força o push (contato vazio = app "morto")
+sudo -u asterisk /usr/local/bin/asterisk-push-notify <RAMAL> "" <CALLER>
 
 # log do Asterisk
 tail -f /var/log/asterisk/full.log | grep -i "asterisk-push-notify"
