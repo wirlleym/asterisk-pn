@@ -1,0 +1,12 @@
+Package: asterisk-push-notify-mobile
+Version: 1.0.0
+Section: comm
+Priority: optional
+Architecture: amd64
+Maintainer: Wirlley <wirlleym@users.noreply.github.com>
+Depends: libc6
+Description: Acordador de softphone VoIP (push APNs/FCM) para Asterisk
+ Binario de linha de comando que o dialplan do Asterisk executa para
+ acordar o app do celular (push) quando um ramal esta sem registro.
+ Nao cria ramais nem modulos: apenas envia o push (APNs para iOS e
+ FCM para Android). O gancho no dialplan e documentado no README.

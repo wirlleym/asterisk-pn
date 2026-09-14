@@ -1,0 +1,13 @@
+# binario compilado
+/asterisk-push-notify
+
+# pacote gerado
+*.deb
+
+# segredos
+*.p8
+push.env
+
+# Go
+*.test
+*.out

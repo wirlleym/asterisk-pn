@@ -1,0 +1,19 @@
+#!/bin/sh
+set -e
+
+# Cria o diretorio de config e, na primeira instalacao, copia o exemplo.
+if [ ! -d /etc/asterisk-push-notify-mobile ]; then
+    install -d -m 0750 /etc/asterisk-push-notify-mobile
+fi
+
+if [ ! -f /etc/asterisk-push-notify-mobile/push.env ]; then
+    cp /etc/asterisk-push-notify-mobile/push.env.example /etc/asterisk-push-notify-mobile/push.env
+    chmod 0600 /etc/asterisk-push-notify-mobile/push.env
+    echo "[asterisk-push-notify-mobile] criado /etc/asterisk-push-notify-mobile/push.env (edite as credenciais)"
+else
+    echo "[asterisk-push-notify-mobile] /etc/asterisk-push-notify-mobile/push.env ja existe (mantido)"
+fi
+
+echo "[asterisk-push-notify-mobile] binario instalado em /usr/local/bin/asterisk-push-notify"
+echo "[asterisk-push-notify-mobile] veja /usr/share/doc/asterisk-push-notify-mobile/README.md"
+exit 0
