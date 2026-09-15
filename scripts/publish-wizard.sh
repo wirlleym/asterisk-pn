@@ -162,7 +162,7 @@ finish() {
 # STAGES
 # ──────────────────────────────────────────────────────────────────────────
 
-TOTAL_STAGES=7
+TOTAL_STAGES=8
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 ENV_FILE="$REPO_ROOT/.publish.env"
 
@@ -184,6 +184,27 @@ if command -v flatpak-builder >/dev/null 2>&1; then
   note "flatpak-builder já instalado (só p/ teste local)."
 elif confirm "Instalar flatpak-builder (opcional — só para testar o Flatpak localmente)?"; then
   run sudo apt-get install -y flatpak-builder || true
+fi
+pause
+
+stage "Autenticação (preflight)"
+say "Vou verificar o que já está autenticado antes de começar."
+if command -v gh >/dev/null 2>&1 && gh auth status >/dev/null 2>&1; then
+  note "✓ GitHub (gh): autenticado."
+else
+  warn "GitHub (gh) NÃO autenticado — o Flathub precisa disso."
+  step "Rode em outro terminal: gh auth login  (siga o fluxo)."
+  pause "Autenticou o gh? Enter para continuar."
+fi
+if command -v gh >/dev/null 2>&1 && timeout 8 ssh -o BatchMode=yes -T git@github.com 2>/dev/null | grep -q "successfully authenticated"; then
+  note "✓ SSH para GitHub: ok."
+else
+  note "SSH p/ GitHub não confirmado — o push pode usar HTTPS (o gh cuida)."
+fi
+if command -v snapcraft >/dev/null 2>&1 && snapcraft whoami >/dev/null 2>&1; then
+  note "✓ Snap Store: já logado ($(snapcraft whoami 2>/dev/null))."
+else
+  note "Snap Store: login será feito na próxima etapa (e-mail + senha + 2FA)."
 fi
 pause
 
