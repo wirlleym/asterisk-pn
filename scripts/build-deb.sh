@@ -10,7 +10,7 @@ STAGE="$(mktemp -d)"
 trap 'rm -rf "$STAGE"' EXIT
 
 echo "[build] compilando o binario (go build)..."
-( cd "$ROOT" && go build -o "$STAGE/asterisk-pn" . )
+( cd "$ROOT" && CGO_ENABLED=0 go build -o "$STAGE/asterisk-pn" . )
 
 echo "[build] montando a arvore do pacote..."
 mkdir -p "$STAGE/pkg/DEBIAN"

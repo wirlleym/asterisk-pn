@@ -9,6 +9,13 @@ description: |
 
   Nome descritivo: asterisk-push-notify.
 
+title: asterisk-pn
+contact: https://github.com/wirlleym/asterisk-pn
+issues: https://github.com/wirlleym/asterisk-pn/issues
+source-code: https://github.com/wirlleym/asterisk-pn
+website: https://github.com/wirlleym/asterisk-pn
+license: MIT
+
 grade: stable
 confinement: classic
 
@@ -20,7 +27,7 @@ parts:
     source: .
     source-type: local
     override-build: |
-      go build -o asterisk-pn .
+      CGO_ENABLED=0 go build -o asterisk-pn .
       install -D -m 0755 asterisk-pn "$SNAPCRAFT_PART_INSTALL/bin/asterisk-pn"
 
 apps:
