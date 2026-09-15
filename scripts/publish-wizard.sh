@@ -196,10 +196,13 @@ else
   step "Rode em outro terminal: gh auth login  (siga o fluxo)."
   pause "Autenticou o gh? Enter para continuar."
 fi
-if command -v gh >/dev/null 2>&1 && timeout 8 ssh -o BatchMode=yes -T git@github.com 2>/dev/null | grep -q "successfully authenticated"; then
-  note "✓ SSH para GitHub: ok."
-else
-  note "SSH p/ GitHub não confirmado — o push pode usar HTTPS (o gh cuida)."
+if command -v gh >/dev/null 2>&1; then
+  _ssh_out="$(timeout 8 ssh -o BatchMode=yes -o StrictHostKeyChecking=accept-new -T git@github.com 2>&1 || true)"
+  if [[ "$_ssh_out" == *"successfully authenticated"* ]]; then
+    note "✓ SSH para GitHub: ok."
+  else
+    note "SSH p/ GitHub não confirmado — o push pode usar HTTPS (o gh cuida)."
+  fi
 fi
 if command -v snapcraft >/dev/null 2>&1 && snapcraft whoami >/dev/null 2>&1; then
   note "✓ Snap Store: já logado ($(snapcraft whoami 2>/dev/null))."
@@ -251,6 +254,10 @@ pause
 
 stage "Flathub — enviar manifest e abrir PR"
 say "Envia o manifest + metainfo para o seu fork e abre o PR no Flathub."
+if [[ -z "$FLATHUB_FORK_URL" ]]; then
+  warn "URL do fork vazia. Re-role o wizard e cole a URL do fork nesta etapa."
+  exit 1
+fi
 FLATHUB_DIR=$(mktemp -d)
 run git clone "$FLATHUB_FORK_URL" "$FLATHUB_DIR"
 run cp "$REPO_ROOT/packaging/flatpak/io.github.wirlleym.asterisk-pn.yml" "$FLATHUB_DIR/"

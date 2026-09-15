@@ -3,6 +3,10 @@
 
 # pacote gerado
 *.deb
+*.snap
+
+# estado local do wizard
+.publish.env
 
 # segredos
 *.p8
