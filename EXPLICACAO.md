@@ -425,15 +425,65 @@ Pontos importantes:
 
 ---
 
+## `options.go` — como checa se o app está vivo
+
+Antes de mandar o push, o binário **checa se o app está vivo** mandando um
+`OPTIONS` SIP para o contato do ramal. Se responder, não precisa de push.
+
+### `checkAlive(contacts)`
+
+```go
+for _, c := range strings.Split(contacts, "&") {
+	if optionsPing(strings.TrimSpace(c)) { return true }
+}
+return false
+```
+
+- O dialplan passa `${PJSIP_DIAL_CONTACTS(...)}` como `contacts` (uma string com
+  os contatos separados por `&`).
+- Se **qualquer** contato responder → `true` (vivo). Se **nenhum** → `false` (morto).
+
+### `optionsPing(contact)`
+
+```go
+host, port, user, transport := parseContact(contact)
+msg := buildOptions(transport, host, port, user)
+return pingTransport(transport, host, port, msg)
+```
+
+1. `parseContact` extrai `host`, `porta`, `usuário` e `transporte` de um contato
+   `sip:user@host:porta;transport=udp|tcp|tls`.
+2. `buildOptions` monta a mensagem `OPTIONS` (com o `Via` correto por transporte).
+3. `pingTransport` envia:
+   - `udp` → socket UDP;
+   - `tcp` → socket TCP;
+   - `tls` → conexão TLS (sem validar o certificado — é só uma checagem de vida).
+
+### `pingUDP` / `pingStream`
+
+Ambas fazem o mesmo: conectam, escrevem o `OPTIONS` e ficam lendo por até
+`optionsTimeout` (2s). Se **chegar qualquer resposta** → `true` (vivo); se der
+**timeout** → `false` (morto). Não importa o conteúdo da resposta (200, 401, 404
+etc.) — qualquer resposta prova que o app está vivo.
+
+### Por que isso evita o `qualify` do servidor
+
+O `qualify` é periódico (tem janela). Aqui a checagem é **na hora da chamada**:
+o próprio binário pergunta "você está aí?" e decide naquele instante.
+
+---
+
 ## Resumo do fluxo completo
 
 ```
-Asterisk: System(asterisk-push-notify 00506 1234)
+Asterisk: System(asterisk-push-notify <ramal> <contacts> <caller>)
     │
-    ├─ main.go: args = ["00506", "1234"] → modo notify
-    ├─ config.go: lê /etc/asterisk-push-notify-mobile/push.env (chave, tópico...)
-    ├─ store.go: acha o token do ramal 00506 em devices.json
-    ├─ apns.go / fcm.go: assina o JWT e manda o push
-    │                    (APNs p/ iPhone, FCM p/ Android)
-    └─ devolve "delivered=true" ou "nao entregue" (sem derrubar a chamada)
+    ├─ main.go: modo notify
+    ├─ options.go: manda OPTIONS pro contato
+    │    ├─ respondeu → vivo → exit 0 (disca direto, SEM push)
+    │    └─ não respondeu → morto
+    │         ├─ store.go: acha o token do ramal
+    │         ├─ apns.go / fcm.go: assina o JWT e manda o push
+    │         └─ exit 1 (o dialplan faz Wait(3) e disca)
+    └─ Dial(PJSIP/...) → app atende
 ```

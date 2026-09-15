@@ -2,6 +2,7 @@ package main
 
 import (
 	"crypto/rand"
+	"crypto/tls"
 	"encoding/hex"
 	"fmt"
 	"net"
@@ -32,13 +33,28 @@ func randomHex(n int) string {
 	return hex.EncodeToString(buf)
 }
 
-// optionsPing manda um OPTIONS para um contato "sip:user@host:port" e espera
-// uma resposta. Qualquer resposta = app vivo.
+// optionsPing manda um OPTIONS para um contato e espera resposta (qualquer
+// resposta = app vivo). Usa o transporte do contato (udp/tcp/tls).
 func optionsPing(contact string) bool {
-	host, port, user := parseContact(contact)
+	host, port, user, transport := parseContact(contact)
 	if host == "" || port == "" {
 		return false
 	}
+	msg := buildOptions(transport, host, port, user)
+	return pingTransport(transport, host, port, msg)
+}
+
+// pingTransport envia a mensagem SIP pelo transporte certo.
+func pingTransport(transport, host, port, msg string) bool {
+	switch transport {
+	case "tcp", "tls":
+		return pingStream(transport, host, port, msg)
+	default: // udp
+		return pingUDP(host, port, msg)
+	}
+}
+
+func pingUDP(host, port, msg string) bool {
 	addr := net.JoinHostPort(host, port)
 	conn, err := net.DialTimeout("udp", addr, 1500*time.Millisecond)
 	if err != nil {
@@ -47,7 +63,7 @@ func optionsPing(contact string) bool {
 	defer conn.Close()
 	_ = conn.SetDeadline(time.Now().Add(optionsTimeout))
 
-	if _, err := conn.Write([]byte(buildOptions(host, port, user))); err != nil {
+	if _, err := conn.Write([]byte(msg)); err != nil {
 		return false
 	}
 	buf := make([]byte, 2048)
@@ -55,13 +71,50 @@ func optionsPing(contact string) bool {
 	return err == nil
 }
 
-// parseContact extrai host, porta e usuario de um contato SIP.
-func parseContact(contact string) (host, port, user string) {
+func pingStream(transport, host, port, msg string) bool {
+	addr := net.JoinHostPort(host, port)
+	dialer := &net.Dialer{Timeout: 1500 * time.Millisecond}
+	var conn net.Conn
+	var err error
+	if transport == "tls" {
+		// Checagem de aliveness: o app pode ter certificado proprio; nao
+		// validamos a cadeia, so queremos saber se responde.
+		conn, err = tls.DialWithDialer(dialer, "tcp", addr, &tls.Config{InsecureSkipVerify: true})
+	} else {
+		conn, err = dialer.Dial("tcp", addr)
+	}
+	if err != nil {
+		return false
+	}
+	defer conn.Close()
+	_ = conn.SetDeadline(time.Now().Add(optionsTimeout))
+
+	if _, err := conn.Write([]byte(msg)); err != nil {
+		return false
+	}
+	buf := make([]byte, 2048)
+	_, err = conn.Read(buf)
+	return err == nil
+}
+
+// parseContact extrai host, porta, usuario e transporte de um contato SIP.
+func parseContact(contact string) (host, port, user, transport string) {
 	s := contact
 	if i := strings.Index(s, "://"); i >= 0 {
 		s = s[i+3:]
 	}
-	if i := strings.IndexAny(s, ";?"); i >= 0 {
+	// parametros (;transport=...)
+	if i := strings.Index(s, ";"); i >= 0 {
+		params := s[i+1:]
+		s = s[:i]
+		for _, p := range strings.Split(params, ";") {
+			p = strings.TrimSpace(p)
+			if strings.HasPrefix(p, "transport=") {
+				transport = strings.ToLower(strings.TrimPrefix(p, "transport="))
+			}
+		}
+	}
+	if i := strings.Index(s, "?"); i >= 0 {
 		s = s[:i]
 	}
 	if i := strings.LastIndex(s, "@"); i >= 0 {
@@ -77,7 +130,10 @@ func parseContact(contact string) (host, port, user string) {
 			port = p
 		}
 	}
-	return host, port, user
+	if transport == "" {
+		transport = "udp"
+	}
+	return host, port, user, transport
 }
 
 func allDigits(s string) bool {
@@ -93,21 +149,22 @@ func allDigits(s string) bool {
 }
 
 // buildOptions monta um SIP OPTIONS simples.
-func buildOptions(host, port, user string) string {
+func buildOptions(transport, host, port, user string) string {
 	branch := "z9hG4bK" + randomHex(8)
 	tag := randomHex(8)
 	callID := randomHex(16)
 	via := net.JoinHostPort(host, port)
 	uri := fmt.Sprintf("sip:%s@%s", user, via)
+	viaProto := strings.ToUpper(transport)
 	return fmt.Sprintf(
 		"OPTIONS %s SIP/2.0\r\n"+
-			"Via: SIP/2.0/UDP %s;branch=%s;rport\r\n"+
+			"Via: SIP/2.0/%s %s;branch=%s;rport\r\n"+
 			"From: <sip:asterisk@%s>;tag=%s\r\n"+
 			"To: <%s>\r\n"+
 			"Call-ID: %s@%s\r\n"+
 			"CSeq: 1 OPTIONS\r\n"+
 			"Max-Forwards: 70\r\n"+
 			"Content-Length: 0\r\n\r\n",
-		uri, via, branch, host, tag, uri, callID, host,
+		uri, viaProto, via, branch, host, tag, uri, callID, host,
 	)
 }
