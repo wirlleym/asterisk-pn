@@ -1,0 +1,28 @@
+name: asterisk-pn
+base: core22
+version: '1.0.7'
+summary: Asterisk softphone push notifier (asterisk-push-notify)
+description: |
+  Acordador de softphone VoIP (push APNs/FCM) para o Asterisk.
+  O dialplan chama `asterisk-pn` para checar (SIP OPTIONS) se o app do
+  celular está vivo e, se não estiver, enviar o push para acordá-lo.
+
+  Nome descritivo: asterisk-push-notify.
+
+grade: stable
+confinement: classic
+
+parts:
+  asterisk-pn:
+    plugin: nil
+    build-snaps:
+      - go/latest/stable
+    source: .
+    source-type: local
+    override-build: |
+      go build -o asterisk-pn .
+      install -D -m 0755 asterisk-pn "$SNAPCRAFT_PART_INSTALL/bin/asterisk-pn"
+
+apps:
+  asterisk-pn:
+    command: bin/asterisk-pn

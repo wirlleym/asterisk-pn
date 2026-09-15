@@ -1,0 +1,26 @@
+app-id: io.github.wirlleym.asterisk-pn
+runtime: org.freedesktop.Platform
+runtime-version: '23.08'
+sdk: org.freedesktop.Sdk
+sdk-extensions:
+  - org.freedesktop.Sdk.Extension.golang
+command: asterisk-pn
+
+finish-args:
+  - --filesystem=host
+  - --socket=network
+
+build-options:
+  env:
+    PATH: /usr/lib/sdk/golang/bin:/usr/bin:/bin
+
+modules:
+  - name: asterisk-pn
+    buildsystem: simple
+    build-commands:
+      - go build -o asterisk-pn .
+    sources:
+      - type: dir
+        path: .
+    post-install:
+      - install -Dm755 asterisk-pn /app/bin/asterisk-pn

@@ -50,6 +50,10 @@ sudo asterisk-pn --register <RAMAL> <TOKEN>
 
 ---
 
+Também disponível como **Snap** e **Flatpak** — veja [`PACKAGING.md`](PACKAGING.md).
+
+---
+
 ## Comandos
 
 ```
@@ -70,6 +74,7 @@ asterisk-pn --list                               lista os tokens
 | [`PACKAGE-README.md`](PACKAGE-README.md) | instalação e uso (para o admin) |
 | [`INSTALL.md`](INSTALL.md) | instalação manual / compilando do fonte |
 | [`EXPLICACAO.md`](EXPLICACAO.md) | o código explicado **linha a linha** |
+| [`PACKAGING.md`](PACKAGING.md) | como empacotar: `.deb`, Snap e Flatpak |
 
 ## Compilar / empacotar
 
