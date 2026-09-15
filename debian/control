@@ -1,4 +1,4 @@
-Package: asterisk-push-notify-mobile
+Package: asterisk-push-notify
 Version: 1.0.0
 Section: comm
 Priority: optional

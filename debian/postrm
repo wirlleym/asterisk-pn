@@ -1,6 +1,6 @@
 #!/bin/sh
 set -e
-# Remove apenas os artefatos gerados; preserva /etc/asterisk-push-notify-mobile/push.env
-# (configuracao do usuario) e /etc/asterisk-push-notify-mobile/devices.json (tokens).
-echo "[asterisk-push-notify-mobile] removido. /etc/asterisk-push-notify-mobile/push.env e devices.json foram preservados."
+# Remove apenas os artefatos gerados; preserva /etc/asterisk-push-notify/push.env
+# (configuracao do usuario) e /etc/asterisk-push-notify/devices.json (tokens).
+echo "[asterisk-push-notify] removido. /etc/asterisk-push-notify/push.env e devices.json foram preservados."
 exit 0

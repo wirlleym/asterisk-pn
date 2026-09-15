@@ -6,7 +6,7 @@ import (
 )
 
 // Config do CLI. Os valores vem de variaveis de ambiente e, se ausentes, de um
-// arquivo KEY=VALUE (default: /etc/asterisk-push-notify-mobile/push.env) — util quando o CLI e
+// arquivo KEY=VALUE (default: /etc/asterisk-push-notify/push.env) — util quando o CLI e
 // chamado pelo dialplan, que nao propaga o ambiente do shell.
 type Config struct {
 	DataFile          string
@@ -50,9 +50,9 @@ func loadEnvFile(path string) {
 }
 
 func loadConfig() Config {
-	loadEnvFile(env("PUSH_ENV_FILE", "/etc/asterisk-push-notify-mobile/push.env"))
+	loadEnvFile(env("PUSH_ENV_FILE", "/etc/asterisk-push-notify/push.env"))
 	return Config{
-		DataFile:          env("PUSH_DATA_FILE", "/etc/asterisk-push-notify-mobile/devices.json"),
+		DataFile:          env("PUSH_DATA_FILE", "/etc/asterisk-push-notify/devices.json"),
 		APNSKeyPath:       env("APNS_KEY_PATH", ""),
 		APNSKeyID:         env("APNS_KEY_ID", ""),
 		APNSTeamID:        env("APNS_TEAM_ID", ""),

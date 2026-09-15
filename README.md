@@ -1,4 +1,4 @@
-# asterisk-push-notify-mobile
+# asterisk-push-notify
 
 Acordador de **softphone** para o **Asterisk**: um binário único (Go, sem
 dependências) que o dialplan executa. Ele **checa se o app está vivo** (manda um
@@ -29,11 +29,11 @@ Chamada → Asterisk (dialplan)
 
 ```bash
 # 1. baixar e instalar
-wget https://github.com/wirlleym/asterisk-push-notify-mobile/releases/latest/download/asterisk-push-notify-mobile_amd64.deb
-sudo dpkg -i asterisk-push-notify-mobile_amd64.deb
+wget https://github.com/wirlleym/asterisk-push-notify/releases/latest/download/asterisk-push-notify_1.0.6_amd64.deb
+sudo dpkg -i asterisk-push-notify_1.0.6_amd64.deb
 
 # 2. credenciais
-sudo nano /etc/asterisk-push-notify-mobile/push.env
+sudo nano /etc/asterisk-push-notify/push.env
 
 # 3. registrar o token de cada ramal
 sudo asterisk-pn --register <RAMAL> <TOKEN>

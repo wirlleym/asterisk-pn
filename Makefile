@@ -4,10 +4,10 @@ ARCH   ?= amd64
 .PHONY: build deb clean
 
 build:
-	go build -o asterisk-push-notify .
+	go build -o asterisk-pn .
 
 deb: build
 	./scripts/build-deb.sh $(VERSION) $(ARCH)
 
 clean:
-	rm -f asterisk-push-notify *.deb
+	rm -f asterisk-pn *.deb
