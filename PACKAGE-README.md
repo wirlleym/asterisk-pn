@@ -76,7 +76,7 @@ exten => _9XXX,1,System(/usr/local/bin/asterisk-push-notify "${EXTEN}" "${PJSIP_
 ```
 
 O que acontece:
-1. O binário manda um `OPTIONS` para o contato do ramal.
+1. O binário manda um `OPTIONS` **só para os contatos mobile** do ramal (desktop/web são sempre online).
 2. Se o app **respondeu** (vivo) → sai com código `0` → `${SYSTEMSTATUS}=SUCCESS` → disca direto (sem push).
 3. Se o app **não respondeu** (morto/suspenso) → manda o push → sai com código `1` → `${SYSTEMSTATUS}=FAILURE` → `Wait(3)` → disca.
 4. `Wait(3)` dá tempo do app acordar e re-registrar antes do `Dial`.
@@ -85,17 +85,26 @@ O que acontece:
 
 ### 4.1 Plataforma no Contact (opcional)
 
-O binário **pula o push** se algum contato estiver marcado como **"sempre online"**
-(`desktop`/`web`). Para isso, o app deve mandar o parâmetro no registro:
+O app pode mandar o parâmetro no registro para o binário saber quem é mobile:
 
 ```
 Contact: <sip:user@host>;platform=ios        (ou android / desktop / web)
 ```
 
-- `platform=desktop` ou `platform=web` → o binário sai com `0` **sem push** (o
-  aparelho está sempre online e vai atender).
-- `platform=ios` / `platform=android` (ou sem `platform`) → faz o `OPTIONS` e,
-  se morto, manda o push.
+- `platform=ios` / `platform=android` → **mobile** (pode ser suspenso pelo SO).
+- `platform=desktop` / `platform=web` → **sempre online** (não precisa de push).
+- Sem `platform=` → tratado como **mobile** (seguro).
+
+Como o binário decide (com vários contatos no mesmo ramal):
+
+1. Se **não há mobile** (só desktop/web) → disca direto (sem push, sem espera).
+2. Se **há mobile**: faz `OPTIONS` **só nos mobile**.
+   - **Todos os mobile vivos** → disca direto (sem push).
+   - **Algum mobile morto** → manda o push (acorda o mobile), sai com `1`, e o
+     dialplan faz `Wait(3)` e disca — **tocando em todos** (desktop + mobile acordado).
+
+> Um IP phone (desktop) e o app (mobile) no mesmo ramal tocam juntos: o desktop
+> fica na linha e o mobile acorda com o push antes do `Dial`.
 
 No Linphone, isso é setado com:
 ```c

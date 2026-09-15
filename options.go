@@ -169,20 +169,17 @@ func buildOptions(transport, host, port, user string) string {
 	)
 }
 
-// hasAlwaysOnline retorna true se algum contato e de plataforma que nao e
-// suspensa pelo SO (desktop/web) — nesse caso o aparelho esta sempre online e
-// nao precisa de push.
-func hasAlwaysOnline(contacts string) bool {
-	contacts = strings.TrimSpace(contacts)
-	if contacts == "" {
-		return false
-	}
-	for _, c := range strings.Split(contacts, "&") {
-		if isAlwaysOnlinePlatform(parsePlatform(strings.TrimSpace(c))) {
-			return true
+// mobileContacts retorna apenas os contatos mobile (ios/android) do ramal.
+// Contato sem "platform" e tratado como mobile (seguro: faz o OPTIONS).
+func mobileContacts(contacts string) []string {
+	var out []string
+	for _, c := range strings.Split(strings.TrimSpace(contacts), "&") {
+		c = strings.TrimSpace(c)
+		if c != "" && isMobilePlatform(parsePlatform(c)) {
+			out = append(out, c)
 		}
 	}
-	return false
+	return out
 }
 
 // parsePlatform extrai o parametro "platform" de um contato SIP.
@@ -202,12 +199,8 @@ func parsePlatform(contact string) string {
 	return ""
 }
 
-// isAlwaysOnlinePlatform indica plataformas "sempre online" (nao mobile).
-func isAlwaysOnlinePlatform(p string) bool {
-	switch p {
-	case "desktop", "web", "windows", "macos", "linux":
-		return true
-	default:
-		return false
-	}
+// isMobilePlatform indica plataformas mobile (que podem ser suspensas pelo SO).
+// Sem o parametro "platform", assume mobile.
+func isMobilePlatform(p string) bool {
+	return p == "" || p == "ios" || p == "android"
 }

@@ -8,8 +8,10 @@ Android), **envia o push** para acordá-lo — e o dialplan então disca.
 - **Não cria ramais.** Funciona com os ramais que você já tem.
 - **Não cria módulo.** É um binário externo chamado por uma linha no dialplan.
 - **Não depende de `qualify` do servidor** — o próprio binário faz o `OPTIONS`.
-- **Sabe a plataforma**: se o app mandar `;platform=desktop` (ou `web`) no
-  registro, o push é pulado (aparelho sempre online). Sem isso, ele checa via `OPTIONS`.
+- **Sabe a plataforma**: o app manda `;platform=ios|android|desktop|web` no
+  registro. Só os **mobile** são checados com `OPTIONS`/push; `desktop`/`web`
+  são sempre online. Se o ramal tiver desktop **e** mobile morto, ele acorda o
+  mobile e o `Dial` toca em todos.
 - **A ligação continua 100% no Asterisk** — o binário só decide "acorda ou não".
 
 ```

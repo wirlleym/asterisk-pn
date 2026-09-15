@@ -56,12 +56,13 @@ func main() {
 		contacts := argOr(args, 1, "")
 		caller := argOr(args, 2, "")
 
-		if hasAlwaysOnline(contacts) {
-			fmt.Fprintln(os.Stderr, "always_online=true (desktop/web presente; sem push)")
+		mobiles := mobileContacts(contacts)
+		if len(mobiles) == 0 {
+			fmt.Fprintln(os.Stderr, "no_mobile=true (so desktop/web; sem push)")
 			os.Exit(0)
 		}
-		if checkAlive(contacts) {
-			fmt.Fprintln(os.Stderr, "alive=true (sem push)")
+		if checkAlive(strings.Join(mobiles, "&")) {
+			fmt.Fprintln(os.Stderr, "alive=true (mobile vivo; sem push)")
 			os.Exit(0)
 		}
 		// app morto (ou sem contato) → push
