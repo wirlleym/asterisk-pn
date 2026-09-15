@@ -14,6 +14,6 @@ else
     echo "[asterisk-push-notify-mobile] /etc/asterisk-push-notify-mobile/push.env ja existe (mantido)"
 fi
 
-echo "[asterisk-push-notify-mobile] binario instalado em /usr/local/bin/asterisk-push-notify"
+echo "[asterisk-push-notify-mobile] binario instalado em /usr/local/bin/asterisk-pn (symlink: asterisk-push-notify)"
 echo "[asterisk-push-notify-mobile] veja /usr/share/doc/asterisk-push-notify-mobile/README.md"
 exit 0

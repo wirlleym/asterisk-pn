@@ -16,10 +16,12 @@ acordá-lo — o dialplan então disca.
 
 | Caminho | O que é |
 |---|---|
-| `/usr/local/bin/asterisk-push-notify` | o binário (o acordador) |
+| `/usr/local/bin/asterisk-pn` | o binário (o acordador) |
+| `/usr/local/bin/asterisk-push-notify` | symlink → `asterisk-pn` (compatibilidade) |
 | `/etc/asterisk-push-notify-mobile/push.env` | configuração (credenciais) — **você edita isto** |
 | `/etc/asterisk-push-notify-mobile/push.env.example` | modelo comentado |
 | `/etc/asterisk-push-notify-mobile/devices.json` | onde ficam os tokens `ramal ↔ token` (criado no 1º uso) |
+| `/usr/share/doc/asterisk-push-notify-mobile/README.md` | esta documentação |
 
 ---
 
@@ -51,13 +53,13 @@ grupo do usuário do Asterisk, para o dialplan conseguir ler).
 Uma vez por aparelho (depois que o app gerar o token de push):
 
 ```bash
-sudo -u asterisk /usr/local/bin/asterisk-push-notify --register <RAMAL> <TOKEN>
+sudo -u asterisk /usr/local/bin/asterisk-pn --register <RAMAL> <TOKEN>
 # Android (FCM):   ... --register <RAMAL> <TOKEN> fcm
 ```
 
 Listar:
 ```bash
-sudo -u asterisk /usr/local/bin/asterisk-push-notify --list
+sudo -u asterisk /usr/local/bin/asterisk-pn --list
 ```
 
 ---
@@ -68,7 +70,7 @@ No contexto que recebe as chamadas dos **seus ramais**, adicione, **antes do
 `Dial`**. Adapte o padrão (`_9XXX` etc.) ao seu caso:
 
 ```
-exten => _9XXX,1,System(/usr/local/bin/asterisk-push-notify "${EXTEN}" "${PJSIP_DIAL_CONTACTS(${EXTEN})}" "${CALLERID(num)}")
+exten => _9XXX,1,System(/usr/local/bin/asterisk-pn "${EXTEN}" "${PJSIP_DIAL_CONTACTS(${EXTEN})}" "${CALLERID(num)}")
  same => n,GotoIf($["${SYSTEMSTATUS}" = "SUCCESS"]?dial:wake)
  same => n(wake),Wait(3)
  same => n(dial),Dial(PJSIP/${EXTEN},30)
@@ -119,10 +121,10 @@ Depois de editar: `asterisk -rx "dialplan reload"`.
 
 ```bash
 # força o push (contato vazio = app "morto")
-sudo -u asterisk /usr/local/bin/asterisk-push-notify <RAMAL> "" <CALLER>
+sudo -u asterisk /usr/local/bin/asterisk-pn <RAMAL> "" <CALLER>
 
 # log do Asterisk
-tail -f /var/log/asterisk/full.log | grep -i "asterisk-push-notify"
+tail -f /var/log/asterisk/full.log | grep -i "asterisk-pn"
 ```
 
 ---

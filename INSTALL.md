@@ -1,11 +1,11 @@
-# Instalação manual — asterisk-push-notify (CLI Go, sem daemon)
+# Instalação manual — asterisk-pn (CLI Go, sem daemon)
 
 O `push-service` aqui é um **CLI** (binário único, sem HTTP, sem systemd, sem porta).
 O **Asterisk** chama o CLI direto pelo dialplan; ele só **acorda o app**. A ligação continua 100% no Asterisk.
 
 ```
 Chamada → Asterisk (dialplan)
-   → asterisk-push-notify: OPTIONS pro app
+   → asterisk-pn: OPTIONS pro app
         ├─ respondeu (vivo)   → nada (disca direto)
         └─ não respondeu (morto) → APNs/FCM → app acorda → re-registra
    → Dial(PJSIP/...) → app atende
@@ -22,13 +22,13 @@ Requer **Go ≥ 1.22** apenas para compilar.
 
 ```bash
 cd /caminho/para/asterisk-push-notify-mobile
-go build -o asterisk-push-notify .
-ls -la asterisk-push-notify      # ~7.6 MB, binário único, sem dependências
+go build -o asterisk-pn .
+ls -la asterisk-pn      # ~7.6 MB, binário único, sem dependências
 ```
 
 Cross-compile (ex.: Asterisk em ARM):
 ```bash
-GOOS=linux GOARCH=arm64 go build -o asterisk-push-notify .
+GOOS=linux GOARCH=arm64 go build -o asterisk-pn .
 ```
 
 ---
@@ -37,7 +37,7 @@ GOOS=linux GOARCH=arm64 go build -o asterisk-push-notify .
 
 ### 2.1 Binário
 ```bash
-sudo install -m 0755 asterisk-push-notify /usr/local/bin/asterisk-push-notify
+sudo install -m 0755 asterisk-pn /usr/local/bin/asterisk-pn
 ```
 
 ### 2.2 Chave APNs (`.p8`) e diretório
@@ -75,7 +75,7 @@ sudo chmod 600 /etc/asterisk-push-notify-mobile/devices.json
 
 Teste rápido:
 ```bash
-sudo -u asterisk /usr/local/bin/asterisk-push-notify --list
+sudo -u asterisk /usr/local/bin/asterisk-pn --list
 ```
 
 ---
@@ -84,11 +84,11 @@ sudo -u asterisk /usr/local/bin/asterisk-push-notify --list
 
 Uma vez, com o token VoIP do app (o mesmo `APNS_TOPIC` do `push.env`):
 ```bash
-sudo -u asterisk /usr/local/bin/asterisk-push-notify \
+sudo -u asterisk /usr/local/bin/asterisk-pn \
   --register <RAMAL> <TOKEN_VOIP_DO_APP>
 # ok
 
-sudo -u asterisk /usr/local/bin/asterisk-push-notify --list
+sudo -u asterisk /usr/local/bin/asterisk-pn --list
 ```
 > Formato: `--register <ramal> <token> [provider] [deviceId]`
 > (provider default `apns_voip`; use `fcm` no Android).
@@ -107,7 +107,7 @@ No `extensions.conf`, no contexto dos seus ramais, adicione **antes do `Dial`**
 (troque o padrão `_9XXX` pelo seu):
 
 ```
-exten => _9XXX,1,System(/usr/local/bin/asterisk-push-notify "${EXTEN}" "${PJSIP_DIAL_CONTACTS(${EXTEN})}" "${CALLERID(num)}")
+exten => _9XXX,1,System(/usr/local/bin/asterisk-pn "${EXTEN}" "${PJSIP_DIAL_CONTACTS(${EXTEN})}" "${CALLERID(num)}")
  same => n,GotoIf($["${SYSTEMSTATUS}" = "SUCCESS"]?dial:wake)
  same => n(wake),Wait(3)
  same => n(dial),Dial(PJSIP/${EXTEN},30)
@@ -132,7 +132,7 @@ sudo asterisk -rx "dialplan reload"
 ### 5.1 Push direto
 ```bash
 # força o push (contato vazio = app "morto")
-sudo -u asterisk /usr/local/bin/asterisk-push-notify <RAMAL> "" <CALLER>
+sudo -u asterisk /usr/local/bin/asterisk-pn <RAMAL> "" <CALLER>
 # delivered=true provider=apns_voip ramal=<RAMAL>
 ```
 
@@ -143,14 +143,14 @@ sudo -u asterisk /usr/local/bin/asterisk-push-notify <RAMAL> "" <CALLER>
 
 Log do dialplan:
 ```bash
-sudo tail -f /var/log/asterisk/full.log | grep -i "asterisk-push-notify"
+sudo tail -f /var/log/asterisk/full.log | grep -i "asterisk-pn"
 ```
 
 ---
 
 ## 6. Rollback
 ```bash
-sudo rm -f /usr/local/bin/asterisk-push-notify
+sudo rm -f /usr/local/bin/asterisk-pn
 sudo rm -f /etc/asterisk-push-notify-mobile/push.env /etc/asterisk-push-notify-mobile/AuthKey.p8 /etc/asterisk-push-notify-mobile/devices.json
 # remover o gancho que voce adicionou no extensions.conf
 sudo asterisk -rx "pjsip reload" && sudo asterisk -rx "dialplan reload"

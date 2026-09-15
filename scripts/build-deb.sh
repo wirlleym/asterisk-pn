@@ -10,7 +10,7 @@ STAGE="$(mktemp -d)"
 trap 'rm -rf "$STAGE"' EXIT
 
 echo "[build] compilando o binario (go build)..."
-( cd "$ROOT" && go build -o "$STAGE/asterisk-push-notify" . )
+( cd "$ROOT" && go build -o "$STAGE/asterisk-pn" . )
 
 echo "[build] montando a arvore do pacote..."
 mkdir -p "$STAGE/pkg/DEBIAN"
@@ -18,7 +18,8 @@ mkdir -p "$STAGE/pkg/usr/local/bin"
 mkdir -p "$STAGE/pkg/etc/asterisk-push-notify-mobile"
 mkdir -p "$STAGE/pkg/usr/share/doc/$PKG_NAME"
 
-install -m 0755 "$STAGE/asterisk-push-notify" "$STAGE/pkg/usr/local/bin/asterisk-push-notify"
+install -m 0755 "$STAGE/asterisk-pn" "$STAGE/pkg/usr/local/bin/asterisk-pn"
+ln -s asterisk-pn "$STAGE/pkg/usr/local/bin/asterisk-push-notify"
 install -m 0644 "$ROOT/push.env.example" "$STAGE/pkg/etc/asterisk-push-notify-mobile/push.env.example"
 install -m 0644 "$ROOT/PACKAGE-README.md" "$STAGE/pkg/usr/share/doc/$PKG_NAME/README.md"
 

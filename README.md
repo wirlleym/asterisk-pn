@@ -16,7 +16,7 @@ Android), **envia o push** para acordá-lo — e o dialplan então disca.
 
 ```
 Chamada → Asterisk (dialplan)
-   → asterisk-push-notify:
+   → asterisk-pn:
        OPTIONS pro app
          ├─ respondeu (vivo)   → não faz nada (disca direto)
          └─ não respondeu (morto) → APNs/FCM → app acorda → re-registra
@@ -36,10 +36,10 @@ sudo dpkg -i asterisk-push-notify-mobile_amd64.deb
 sudo nano /etc/asterisk-push-notify-mobile/push.env
 
 # 3. registrar o token de cada ramal
-sudo asterisk-push-notify --register <RAMAL> <TOKEN>
+sudo asterisk-pn --register <RAMAL> <TOKEN>
 
 # 4. gancho no dialplan (no seu contexto, antes do Dial)
-#    exten => _9XXX,1,System(/usr/local/bin/asterisk-push-notify "${EXTEN}" "${PJSIP_DIAL_CONTACTS(${EXTEN})}" "${CALLERID(num)}")
+#    exten => _9XXX,1,System(/usr/local/bin/asterisk-pn "${EXTEN}" "${PJSIP_DIAL_CONTACTS(${EXTEN})}" "${CALLERID(num)}")
 #     same => n,GotoIf($["${SYSTEMSTATUS}" = "SUCCESS"]?dial:wake)
 #     same => n(wake),Wait(3)
 #     same => n(dial),Dial(PJSIP/${EXTEN},30)
@@ -51,9 +51,9 @@ sudo asterisk-push-notify --register <RAMAL> <TOKEN>
 ## Comandos
 
 ```
-asterisk-push-notify <ramal> [contacts] [caller]         checa vivo; morto → push
-asterisk-push-notify --register <ramal> <token> [provider]  cadastra o token
-asterisk-push-notify --list                               lista os tokens
+asterisk-pn <ramal> [contacts] [caller]         checa vivo; morto → push
+asterisk-pn --register <ramal> <token> [provider]  cadastra o token
+asterisk-pn --list                               lista os tokens
 ```
 
 > `<contacts>` é a saída de `${PJSIP_DIAL_CONTACTS(<ramal>)}` (o dialplan passa),

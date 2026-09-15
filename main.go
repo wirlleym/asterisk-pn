@@ -8,15 +8,15 @@ import (
 	"time"
 )
 
-// asterisk-push-notify — acordador de softphone (CLI, sem daemon).
+// asterisk-pn — acordador de softphone (CLI, sem daemon).
 //
 // Responsabilidade: checar se o app está vivo (SIP OPTIONS) e, se estiver
 // "dormindo" (morto), enviar o push para acordá-lo. O dialplan então disca.
 //
 // Uso:
-//   asterisk-push-notify <ramal> [contacts] [caller]   # checa vivo; morto → push
-//   asterisk-push-notify --register <ramal> <token> [provider] [deviceId]
-//   asterisk-push-notify --list
+//   asterisk-pn <ramal> [contacts] [caller]   # checa vivo; morto → push
+//   asterisk-pn --register <ramal> <token> [provider] [deviceId]
+//   asterisk-pn --list
 //
 // Codigo de saida (o dialplan usa ${SYSTEMSTATUS} para decidir):
 //   0 = app vivo (discar direto, sem push)
@@ -43,7 +43,7 @@ func main() {
 		}
 	case "--register", "register":
 		if len(args) < 3 {
-			fmt.Fprintln(os.Stderr, "uso: asterisk-push-notify --register <ramal> <token> [provider] [deviceId]")
+			fmt.Fprintln(os.Stderr, "uso: asterisk-pn --register <ramal> <token> [provider] [deviceId]")
 			os.Exit(2)
 		}
 		if err := register(cfg, args); err != nil {
@@ -83,12 +83,12 @@ func argOr(args []string, i int, fallback string) string {
 }
 
 func usage() {
-	fmt.Println(`asterisk-push-notify — acordador de softphone
+	fmt.Println(`asterisk-pn — acordador de softphone
 
-  asterisk-push-notify <ramal> [contacts] [caller]        checa vivo; morto → push
-  asterisk-push-notify --register <ramal> <token> [provider] [deviceId]
-  asterisk-push-notify --list                              lista os tokens
-  asterisk-push-notify --help
+  asterisk-pn <ramal> [contacts] [caller]        checa vivo; morto → push
+  asterisk-pn --register <ramal> <token> [provider] [deviceId]
+  asterisk-pn --list                              lista os tokens
+  asterisk-pn --help
 
   <contacts> = saida de ${PJSIP_DIAL_CONTACTS(<ramal>)} (para o OPTIONS).
 

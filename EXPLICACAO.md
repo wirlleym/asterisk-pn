@@ -8,14 +8,14 @@ Go nem de push.
 
 ## O que é isso?
 
-O `asterisk-push-notify` é um **programa de linha de comando (CLI)**. Ele não fica
+O `asterisk-pn` é um **programa de linha de comando (CLI)**. Ele não fica
 rodando (não é um servidor): o **Asterisk** o chama quando precisa "acordar" o
 app no celular.
 
 O fluxo é:
 
 ```
-Chamada → Asterisk (ramal frio) → executa "asterisk-push-notify <ramal> <caller>"
+Chamada → Asterisk (ramal frio) → executa "asterisk-pn <ramal> <caller>"
                                   → este programa:
                                       1. lê o token do ramal (arquivo JSON)
                                       2. assina um JWT com a chave .p8
@@ -66,14 +66,14 @@ O primeiro argumento decide **o que o programa faz**:
 | `--register <ramal> <token>` | cadastra (ou atualiza) o token de um ramal |
 | *(nenhum)* → `default` | **modo notify**: dispara o push do ramal |
 
-> `default` roda quando o primeiro argumento é o **ramal** (ex.: `asterisk-push-notify 00506`).
+> `default` roda quando o primeiro argumento é o **ramal** (ex.: `asterisk-pn 00506`).
 
 ### Modo `notify` (linha ~48)
 
 ```go
 	default:
 		if err := notify(cfg, args[0], callerOf(args)); err != nil {
-			fmt.Fprintln(os.Stderr, "asterisk-push-notify:", err)
+			fmt.Fprintln(os.Stderr, "asterisk-pn:", err)
 		}
 		os.Exit(0)
 ```
@@ -476,7 +476,7 @@ o próprio binário pergunta "você está aí?" e decide naquele instante.
 ## Resumo do fluxo completo
 
 ```
-Asterisk: System(asterisk-push-notify <ramal> <contacts> <caller>)
+Asterisk: System(asterisk-pn <ramal> <contacts> <caller>)
     │
     ├─ main.go: modo notify
     ├─ options.go: manda OPTIONS pro contato
