@@ -5,6 +5,12 @@
 *.deb
 *.snap
 
+# artefatos do snapcraft
+parts/
+prime/
+stage/
+.snapcraft/
+
 # estado local do wizard
 .publish.env
 
