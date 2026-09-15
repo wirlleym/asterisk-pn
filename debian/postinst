@@ -2,18 +2,18 @@
 set -e
 
 # Cria o diretorio de config e, na primeira instalacao, copia o exemplo.
-if [ ! -d /etc/asterisk-push-notify ]; then
-    install -d -m 0750 /etc/asterisk-push-notify
+if [ ! -d /etc/asterisk-pn ]; then
+    install -d -m 0750 /etc/asterisk-pn
 fi
 
-if [ ! -f /etc/asterisk-push-notify/push.env ]; then
-    cp /etc/asterisk-push-notify/push.env.example /etc/asterisk-push-notify/push.env
-    chmod 0600 /etc/asterisk-push-notify/push.env
-    echo "[asterisk-push-notify] criado /etc/asterisk-push-notify/push.env (edite as credenciais)"
+if [ ! -f /etc/asterisk-pn/push.env ]; then
+    cp /etc/asterisk-pn/push.env.example /etc/asterisk-pn/push.env
+    chmod 0600 /etc/asterisk-pn/push.env
+    echo "[asterisk-pn] criado /etc/asterisk-pn/push.env (edite as credenciais)"
 else
-    echo "[asterisk-push-notify] /etc/asterisk-push-notify/push.env ja existe (mantido)"
+    echo "[asterisk-pn] /etc/asterisk-pn/push.env ja existe (mantido)"
 fi
 
-echo "[asterisk-push-notify] binario instalado em /usr/local/bin/asterisk-pn"
-echo "[asterisk-push-notify] veja /usr/share/doc/asterisk-push-notify/README.md"
+echo "[asterisk-pn] binario instalado em /usr/local/bin/asterisk-pn"
+echo "[asterisk-pn] veja /usr/share/doc/asterisk-pn/README.md"
 exit 0

@@ -1,4 +1,4 @@
-# asterisk-push-notify — acordador de softphone
+# asterisk-pn — acordador de softphone
 
 Este pacote instala **apenas o "acordador"**: um binário que o dialplan do
 Asterisk executa. Ele **checa se o app está vivo** (manda um SIP `OPTIONS`) e,
@@ -17,32 +17,32 @@ acordá-lo — o dialplan então disca.
 | Caminho | O que é |
 |---|---|
 | `/usr/local/bin/asterisk-pn` | o binário (o acordador) |
-| `/etc/asterisk-push-notify/push.env` | configuração (credenciais) — **você edita isto** |
-| `/etc/asterisk-push-notify/push.env.example` | modelo comentado |
-| `/etc/asterisk-push-notify/devices.json` | onde ficam os tokens `ramal ↔ token` (criado no 1º uso) |
-| `/usr/share/doc/asterisk-push-notify/README.md` | esta documentação |
+| `/etc/asterisk-pn/push.env` | configuração (credenciais) — **você edita isto** |
+| `/etc/asterisk-pn/push.env.example` | modelo comentado |
+| `/etc/asterisk-pn/devices.json` | onde ficam os tokens `ramal ↔ token` (criado no 1º uso) |
+| `/usr/share/doc/asterisk-pn/README.md` | esta documentação |
 
 ---
 
 ## 2. Configurar as credenciais
 
 ```bash
-sudo nano /etc/asterisk-push-notify/push.env
+sudo nano /etc/asterisk-pn/push.env
 ```
 
 Preencha (troque os `<...>`):
 
 ```
-PUSH_DATA_FILE=/etc/asterisk-push-notify/devices.json
-APNS_KEY_PATH=/etc/asterisk-push-notify/AuthKey.p8      # caminho da chave .p8
+PUSH_DATA_FILE=/etc/asterisk-pn/devices.json
+APNS_KEY_PATH=/etc/asterisk-pn/AuthKey.p8      # caminho da chave .p8
 APNS_KEY_ID=<KEY_ID>
 APNS_TEAM_ID=<TEAM_ID>
 APNS_TOPIC=<BUNDLE_ID>.voip
 APNS_ENVIRONMENT=production                    # sandbox p/ dev, production p/ TestFlight
-# FCM_SERVICE_ACCOUNT_JSON=/etc/asterisk-push-notify/fcm-service-account.json   (Android)
+# FCM_SERVICE_ACCOUNT_JSON=/etc/asterisk-pn/fcm-service-account.json   (Android)
 ```
 
-A chave `.p8` você coloca em `/etc/asterisk-push-notify/AuthKey.p8` (permissão 640,
+A chave `.p8` você coloca em `/etc/asterisk-pn/AuthKey.p8` (permissão 640,
 grupo do usuário do Asterisk, para o dialplan conseguir ler).
 
 ---
@@ -131,10 +131,10 @@ tail -f /var/log/asterisk/full.log | grep -i "asterisk-pn"
 ## 6. Remover
 
 ```bash
-sudo dpkg -r asterisk-push-notify
+sudo dpkg -r asterisk-pn
 ```
 
-Sua configuração (`/etc/asterisk-push-notify/push.env`) e os tokens (`devices.json`) são
+Sua configuração (`/etc/asterisk-pn/push.env`) e os tokens (`devices.json`) são
 preservados.
 
 ---
@@ -142,4 +142,4 @@ preservados.
 ## Documentação técnica
 
 Para entender o código **linha a linha**, veja o `EXPLICACAO.md` do projeto
-(pasta `asterisk-push-notify`).
+(pasta `asterisk-pn`).

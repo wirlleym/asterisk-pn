@@ -1,4 +1,4 @@
-Package: asterisk-push-notify
+Package: asterisk-pn
 Version: 1.0.0
 Section: comm
 Priority: optional

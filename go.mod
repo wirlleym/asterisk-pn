@@ -1,3 +1,3 @@
-module github.com/wirlleym/asterisk-push-notify
+module github.com/wirlleym/asterisk-pn
 
 go 1.22

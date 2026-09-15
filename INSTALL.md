@@ -21,7 +21,7 @@ Chamada → Asterisk (dialplan)
 Requer **Go ≥ 1.22** apenas para compilar.
 
 ```bash
-cd /caminho/para/asterisk-push-notify
+cd /caminho/para/asterisk-pn
 go build -o asterisk-pn .
 ls -la asterisk-pn      # ~7.6 MB, binário único, sem dependências
 ```
@@ -42,22 +42,22 @@ sudo install -m 0755 asterisk-pn /usr/local/bin/asterisk-pn
 
 ### 2.2 Chave APNs (`.p8`) e diretório
 ```bash
-sudo install -d -m 0750 /etc/asterisk-push-notify
-sudo install -m 0640 <CAMINHO_DA_CHAVE>.p8 /etc/asterisk-push-notify/AuthKey.p8
+sudo install -d -m 0750 /etc/asterisk-pn
+sudo install -m 0640 <CAMINHO_DA_CHAVE>.p8 /etc/asterisk-pn/AuthKey.p8
 ```
 
-### 2.3 Config (`/etc/asterisk-push-notify/push.env`)
+### 2.3 Config (`/etc/asterisk-pn/push.env`)
 O CLI lê esse arquivo sozinho (o dialplan não passa ambiente).
 ```bash
-sudo tee /etc/asterisk-push-notify/push.env >/dev/null <<'EOF'
-PUSH_DATA_FILE=/etc/asterisk-push-notify/devices.json
-APNS_KEY_PATH=/etc/asterisk-push-notify/AuthKey.p8
+sudo tee /etc/asterisk-pn/push.env >/dev/null <<'EOF'
+PUSH_DATA_FILE=/etc/asterisk-pn/devices.json
+APNS_KEY_PATH=/etc/asterisk-pn/AuthKey.p8
 APNS_KEY_ID=<KEY_ID>
 APNS_TEAM_ID=<TEAM_ID>
 APNS_TOPIC=<BUNDLE_ID>.voip
 APNS_ENVIRONMENT=production
 # Android (opcional):
-# FCM_SERVICE_ACCOUNT_JSON=/etc/asterisk-push-notify/fcm-service-account.json
+# FCM_SERVICE_ACCOUNT_JSON=/etc/asterisk-pn/fcm-service-account.json
 EOF
 ```
 > - `<KEY_ID>` / `<TEAM_ID>`: da chave APNs criada no portal Apple.
@@ -66,11 +66,11 @@ EOF
 
 ### 2.4 Permissões (o Asterisk roda como usuário `asterisk`)
 ```bash
-sudo chown root:asterisk /etc/asterisk-push-notify/push.env /etc/asterisk-push-notify/AuthKey.p8
-sudo chmod 640 /etc/asterisk-push-notify/push.env /etc/asterisk-push-notify/AuthKey.p8
-sudo touch /etc/asterisk-push-notify/devices.json
-sudo chown asterisk:asterisk /etc/asterisk-push-notify/devices.json
-sudo chmod 600 /etc/asterisk-push-notify/devices.json
+sudo chown root:asterisk /etc/asterisk-pn/push.env /etc/asterisk-pn/AuthKey.p8
+sudo chmod 640 /etc/asterisk-pn/push.env /etc/asterisk-pn/AuthKey.p8
+sudo touch /etc/asterisk-pn/devices.json
+sudo chown asterisk:asterisk /etc/asterisk-pn/devices.json
+sudo chmod 600 /etc/asterisk-pn/devices.json
 ```
 
 Teste rápido:
@@ -151,7 +151,7 @@ sudo tail -f /var/log/asterisk/full.log | grep -i "asterisk-pn"
 ## 6. Rollback
 ```bash
 sudo rm -f /usr/local/bin/asterisk-pn
-sudo rm -f /etc/asterisk-push-notify/push.env /etc/asterisk-push-notify/AuthKey.p8 /etc/asterisk-push-notify/devices.json
+sudo rm -f /etc/asterisk-pn/push.env /etc/asterisk-pn/AuthKey.p8 /etc/asterisk-pn/devices.json
 # remover o gancho que voce adicionou no extensions.conf
 sudo asterisk -rx "pjsip reload" && sudo asterisk -rx "dialplan reload"
 ```

@@ -1,5 +1,7 @@
 # asterisk-push-notify
 
+> Comando / binário: **`asterisk-pn`**
+
 Acordador de **softphone** para o **Asterisk**: um binário único (Go, sem
 dependências) que o dialplan executa. Ele **checa se o app está vivo** (manda um
 SIP `OPTIONS`) e, se estiver **"dormindo"** (processo morto/suspenso pelo iOS ou
@@ -29,11 +31,11 @@ Chamada → Asterisk (dialplan)
 
 ```bash
 # 1. baixar e instalar
-wget https://github.com/wirlleym/asterisk-push-notify/releases/latest/download/asterisk-push-notify_1.0.6_amd64.deb
-sudo dpkg -i asterisk-push-notify_1.0.6_amd64.deb
+wget https://github.com/wirlleym/asterisk-pn/releases/latest/download/asterisk-pn_1.0.7_amd64.deb
+sudo dpkg -i asterisk-pn_1.0.7_amd64.deb
 
 # 2. credenciais
-sudo nano /etc/asterisk-push-notify/push.env
+sudo nano /etc/asterisk-pn/push.env
 
 # 3. registrar o token de cada ramal
 sudo asterisk-pn --register <RAMAL> <TOKEN>

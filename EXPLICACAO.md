@@ -1,4 +1,4 @@
-# asterisk-push-notify — explicação linha a linha
+# asterisk-pn — explicação linha a linha
 
 Guia para entender **cada arquivo, cada função e cada linha** do serviço de push
 (CLI Go). Feito para um desenvolvedor junior: não assume conhecimento prévio de
@@ -36,7 +36,7 @@ func main() {
 	args := os.Args[1:]          // pega os argumentos da linha de comando
 ```
 
-- `loadConfig()`: carrega as configurações do arquivo `/etc/asterisk-push-notify/push.env`
+- `loadConfig()`: carrega as configurações do arquivo `/etc/asterisk-pn/push.env`
   (explicado no `config.go`).
 - `os.Args`: é a lista de argumentos. `os.Args[0]` é o nome do programa;
   `os.Args[1:]` são os argumentos que vieram depois (ex.: `00506`, `1234`).
@@ -193,7 +193,7 @@ func loadEnvFile(path string) {
 }
 ```
 
-Lê um arquivo no formato `CHAVE=VALOR` (como o `/etc/asterisk-push-notify/push.env`) e
+Lê um arquivo no formato `CHAVE=VALOR` (como o `/etc/asterisk-pn/push.env`) e
 transforma cada linha em variável de ambiente.
 
 **Por que isso existe?** Quando o Asterisk chama o programa pelo dialplan, ele
@@ -210,9 +210,9 @@ de um arquivo.
 
 ```go
 func loadConfig() Config {
-	loadEnvFile(env("PUSH_ENV_FILE", "/etc/asterisk-push-notify/push.env"))
+	loadEnvFile(env("PUSH_ENV_FILE", "/etc/asterisk-pn/push.env"))
 	return Config{
-		DataFile:        env("PUSH_DATA_FILE", "/etc/asterisk-push-notify/devices.json"),
+		DataFile:        env("PUSH_DATA_FILE", "/etc/asterisk-pn/devices.json"),
 		APNSKeyPath:     env("APNS_KEY_PATH", ""),
 		...
 	}

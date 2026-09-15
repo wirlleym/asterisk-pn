@@ -3,7 +3,7 @@ set -euo pipefail
 
 VERSION="${1:-1.0.0}"
 ARCH="${2:-amd64}"
-PKG_NAME="asterisk-push-notify"
+PKG_NAME="asterisk-pn"
 PKG_FILE="${PKG_NAME}_${VERSION}_${ARCH}.deb"
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 STAGE="$(mktemp -d)"
@@ -15,11 +15,11 @@ echo "[build] compilando o binario (go build)..."
 echo "[build] montando a arvore do pacote..."
 mkdir -p "$STAGE/pkg/DEBIAN"
 mkdir -p "$STAGE/pkg/usr/local/bin"
-mkdir -p "$STAGE/pkg/etc/asterisk-push-notify"
+mkdir -p "$STAGE/pkg/etc/asterisk-pn"
 mkdir -p "$STAGE/pkg/usr/share/doc/$PKG_NAME"
 
 install -m 0755 "$STAGE/asterisk-pn" "$STAGE/pkg/usr/local/bin/asterisk-pn"
-install -m 0644 "$ROOT/push.env.example" "$STAGE/pkg/etc/asterisk-push-notify/push.env.example"
+install -m 0644 "$ROOT/push.env.example" "$STAGE/pkg/etc/asterisk-pn/push.env.example"
 install -m 0644 "$ROOT/PACKAGE-README.md" "$STAGE/pkg/usr/share/doc/$PKG_NAME/README.md"
 
 sed -e "s/^Version:.*/Version: ${VERSION}/" \
