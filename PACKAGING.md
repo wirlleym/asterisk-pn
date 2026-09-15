@@ -1,5 +1,8 @@
 # Empacotamento — asterisk-pn
 
+> Atalho: `scripts/publish-wizard.sh` — passo-a-passo interativo que publica na
+> Snap Store e no Flathub (abre as URLs, pede os valores e roda os comandos).
+
 O mesmo binário Go (`asterisk-pn`) é distribuído de três formas. O nome
 descritivo do projeto é **asterisk-push-notify** (título do README); o
 comando/pacote é `asterisk-pn`.

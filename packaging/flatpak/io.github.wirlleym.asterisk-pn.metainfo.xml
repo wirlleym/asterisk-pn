@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="console-application">
+  <id>io.github.wirlleym.asterisk-pn</id>
+  <name>asterisk-pn</name>
+  <summary>Asterisk softphone push notifier (asterisk-push-notify)</summary>
+  <developer_name>Wirlley Melo</developer_name>
+  <metadata_license>MIT</metadata_license>
+  <project_license>MIT</project_license>
+  <url type="homepage">https://github.com/wirlleym/asterisk-pn</url>
+  <url type="bugtracker">https://github.com/wirlleym/asterisk-pn/issues</url>
+  <description>
+    <p>
+      Acordador de softphone VoIP (push APNs/FCM) para o Asterisk. O dialplan
+      chama o comando <code>asterisk-pn</code> para checar (SIP OPTIONS) se o app
+      do celular está vivo e, se não estiver, enviar o push para acordá-lo.
+    </p>
+  </description>
+  <content_rating type="oars-1.1" />
+  <releases>
+    <release version="1.0.7" date="2026-09-15" />
+  </releases>
+</component>
