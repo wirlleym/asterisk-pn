@@ -56,6 +56,10 @@ func main() {
 		contacts := argOr(args, 1, "")
 		caller := argOr(args, 2, "")
 
+		if hasAlwaysOnline(contacts) {
+			fmt.Fprintln(os.Stderr, "always_online=true (desktop/web presente; sem push)")
+			os.Exit(0)
+		}
 		if checkAlive(contacts) {
 			fmt.Fprintln(os.Stderr, "alive=true (sem push)")
 			os.Exit(0)

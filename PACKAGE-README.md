@@ -83,6 +83,25 @@ O que acontece:
 
 > Sem depender de `qualify` no servidor: o próprio binário faz a checagem `OPTIONS`.
 
+### 4.1 Plataforma no Contact (opcional)
+
+O binário **pula o push** se algum contato estiver marcado como **"sempre online"**
+(`desktop`/`web`). Para isso, o app deve mandar o parâmetro no registro:
+
+```
+Contact: <sip:user@host>;platform=ios        (ou android / desktop / web)
+```
+
+- `platform=desktop` ou `platform=web` → o binário sai com `0` **sem push** (o
+  aparelho está sempre online e vai atender).
+- `platform=ios` / `platform=android` (ou sem `platform`) → faz o `OPTIONS` e,
+  se morto, manda o push.
+
+No Linphone, isso é setado com:
+```c
+linphone_proxy_config_set_contact_uri_parameters(proxy, "platform=ios");
+```
+
 Depois de editar: `asterisk -rx "dialplan reload"`.
 
 ---
